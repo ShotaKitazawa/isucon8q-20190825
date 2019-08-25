@@ -245,7 +245,7 @@ func getEvent(eventID, loginUserID int64) (*Event, error) {
 		Price      int64
 		ReservedAt *time.Time
 	}
-	rows, err := db.Query("SELECT r.user_id, r.sheet_id, s.rank, s.num, s.price, r.reserved_at FROM reservations AS r JOIN sheets AS s ON r.sheet_id = s.id WHERE r.event_id = ? AND r.canceled_at IS NULL GROUP BY r.event_id", eventID)
+	rows, err := db.Query("SELECT r.user_id, r.sheet_id, s.rank, s.num, s.price, r.reserved_at FROM reservations AS r JOIN sheets AS s ON r.sheet_id = s.id WHERE r.event_id = ? AND r.canceled_at IS NULL", eventID)
 	if err != nil {
 		return nil, err
 	}
