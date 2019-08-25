@@ -237,12 +237,6 @@ func getEvent(eventID, loginUserID int64) (*Event, error) {
 
 	event.Total = 1000
 
-	rows, err := db.Query("SELECT s.rank AS rank, r.user_id AS user_id FROM reservations AS r JOIN sheets AS s ON r.sheet_id = s.id WHERE r.event_id = ? AND r.canceled_at IS NULL GROUP BY r.event_id", eventID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
 	type ReservedSheet struct {
 		UserID     int64
 		SheetID    int64
@@ -251,10 +245,15 @@ func getEvent(eventID, loginUserID int64) (*Event, error) {
 		Price      int64
 		ReservedAt *time.Time
 	}
+	rows, err := db.Query("SELECT r.user_id, r.sheet_id, s.rank, s.num, s.price, r.reserved_at FROM reservations AS r JOIN sheets AS s ON r.sheet_id = s.id WHERE r.event_id = ? AND r.canceled_at IS NULL GROUP BY r.event_id", eventID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
 
 	for rows.Next() {
 		reserved_sheet := ReservedSheet{}
-		if err := rows.Scan(&reserved_sheet.Rank, &reserved_sheet.UserID); err != nil {
+		if err := rows.Scan(&reserved_sheet.UserID, &reserved_sheet.SheetID, &reserved_sheet.Rank, &reserved_sheet.Num, &reserved_sheet.Price, &reserved_sheet.ReservedAt); err != nil {
 			return nil, err
 		}
 		event.Sheets[reserved_sheet.Rank].Detail = append(event.Sheets[reserved_sheet.Rank].Detail, &Sheet{
