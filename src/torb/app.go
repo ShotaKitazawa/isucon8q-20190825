@@ -236,6 +236,8 @@ func getEvent(eventID, loginUserID int64) (*Event, error) {
 	}
 
 	event.Total = 1000
+	event.Remains = event.Total
+
 	event.Sheets["S"].Price = event.Price + 5000
 	event.Sheets["S"].Total = 50
 	event.Sheets["A"].Price = event.Price + 3000
@@ -255,7 +257,7 @@ func getEvent(eventID, loginUserID int64) (*Event, error) {
 				Price: sheets.Price,
 			}
 		}
-		sheets.Remains = 0
+		sheets.Remains = sheets.Total
 	}
 
 	type ReservedSheet struct {
@@ -277,7 +279,7 @@ func getEvent(eventID, loginUserID int64) (*Event, error) {
 		if err := rows.Scan(&reserved_sheet.UserID, &reserved_sheet.SheetID, &reserved_sheet.Rank, &reserved_sheet.Num, &reserved_sheet.Price, &reserved_sheet.ReservedAt); err != nil {
 			return nil, err
 		}
-		event.Sheets[reserved_sheet.Rank].Remains++
+		event.Sheets[reserved_sheet.Rank].Remains--
 		event.Sheets[reserved_sheet.Rank].Price = event.Price + reserved_sheet.Price
 		event.Sheets[reserved_sheet.Rank].Detail[reserved_sheet.Num-1] = &Sheet{
 			ID:             reserved_sheet.SheetID,
@@ -289,7 +291,7 @@ func getEvent(eventID, loginUserID int64) (*Event, error) {
 			ReservedAt:     reserved_sheet.ReservedAt,
 			ReservedAtUnix: reserved_sheet.ReservedAt.Unix(),
 		}
-		event.Remains++
+		event.Remains--
 	}
 
 	/*
