@@ -239,15 +239,27 @@ func getEvent(eventID, loginUserID int64) (*Event, error) {
 	event.Sheets["S"].Price = event.Price + 5000
 	event.Sheets["S"].Total = 50
 	event.Sheets["S"].Detail = make([]*Sheet, event.Sheets["S"].Total)
+	for i := 0; i < event.Sheets["S"].Total; i++ {
+		event.Sheets["S"].Detail[i] = &Sheet{}
+	}
 	event.Sheets["A"].Price = event.Price + 3000
 	event.Sheets["A"].Total = 150
 	event.Sheets["A"].Detail = make([]*Sheet, event.Sheets["A"].Total)
+	for i := 0; i < event.Sheets["A"].Total; i++ {
+		event.Sheets["A"].Detail[i] = &Sheet{}
+	}
 	event.Sheets["B"].Price = event.Price + 1000
 	event.Sheets["B"].Total = 300
 	event.Sheets["B"].Detail = make([]*Sheet, event.Sheets["B"].Total)
+	for i := 0; i < event.Sheets["B"].Total; i++ {
+		event.Sheets["B"].Detail[i] = &Sheet{}
+	}
 	event.Sheets["C"].Price = event.Price
 	event.Sheets["C"].Total = 500
 	event.Sheets["C"].Detail = make([]*Sheet, event.Sheets["C"].Total)
+	for i := 0; i < event.Sheets["C"].Total; i++ {
+		event.Sheets["C"].Detail[i] = &Sheet{}
+	}
 
 	type ReservedSheet struct {
 		UserID     int64
