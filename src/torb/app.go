@@ -237,9 +237,13 @@ func getEvent(eventID, loginUserID int64) (*Event, error) {
 
 	event.Total = 1000
 	event.Sheets["S"].Price = event.Price + 5000
+	event.Sheets["S"].Total = 50
 	event.Sheets["A"].Price = event.Price + 3000
+	event.Sheets["A"].Total = 150
 	event.Sheets["B"].Price = event.Price + 1000
+	event.Sheets["B"].Total = 300
 	event.Sheets["C"].Price = event.Price
+	event.Sheets["C"].Total = 500
 
 	type ReservedSheet struct {
 		UserID     int64
