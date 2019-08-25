@@ -238,12 +238,16 @@ func getEvent(eventID, loginUserID int64) (*Event, error) {
 	event.Total = 1000
 	event.Sheets["S"].Price = event.Price + 5000
 	event.Sheets["S"].Total = 50
+	event.Sheets["S"].Detail = make([]*Sheet, event.Sheets["S"].Total)
 	event.Sheets["A"].Price = event.Price + 3000
 	event.Sheets["A"].Total = 150
+	event.Sheets["A"].Detail = make([]*Sheet, event.Sheets["A"].Total)
 	event.Sheets["B"].Price = event.Price + 1000
 	event.Sheets["B"].Total = 300
+	event.Sheets["B"].Detail = make([]*Sheet, event.Sheets["B"].Total)
 	event.Sheets["C"].Price = event.Price
 	event.Sheets["C"].Total = 500
+	event.Sheets["C"].Detail = make([]*Sheet, event.Sheets["C"].Total)
 
 	type ReservedSheet struct {
 		UserID     int64
@@ -264,9 +268,9 @@ func getEvent(eventID, loginUserID int64) (*Event, error) {
 		if err := rows.Scan(&reserved_sheet.UserID, &reserved_sheet.SheetID, &reserved_sheet.Rank, &reserved_sheet.Num, &reserved_sheet.Price, &reserved_sheet.ReservedAt); err != nil {
 			return nil, err
 		}
-		event.Sheets[reserved_sheet.Rank].Remains += 1
+		event.Sheets[reserved_sheet.Rank].Remains++
 		event.Sheets[reserved_sheet.Rank].Price = event.Price + reserved_sheet.Price
-		event.Sheets[reserved_sheet.Rank].Detail = append(event.Sheets[reserved_sheet.Rank].Detail, &Sheet{
+		event.Sheets[reserved_sheet.Rank].Detail[reserved_sheet.Num-1] = &Sheet{
 			ID:             reserved_sheet.SheetID,
 			Rank:           reserved_sheet.Rank,
 			Num:            reserved_sheet.Num,
@@ -275,7 +279,7 @@ func getEvent(eventID, loginUserID int64) (*Event, error) {
 			Reserved:       true,
 			ReservedAt:     reserved_sheet.ReservedAt,
 			ReservedAtUnix: reserved_sheet.ReservedAt.Unix(),
-		})
+		}
 		event.Remains++
 	}
 
