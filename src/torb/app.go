@@ -357,8 +357,8 @@ func getEvent(eventID, loginUserID int64) (*Event, error) {
 					}
 				}
 			}
-			return &event, nil
 		*/
+		return &Event{}, nil
 	} else {
 		fmt.Println("getEvent: cache miss !")
 		var event Event
@@ -423,7 +423,6 @@ func getEvent(eventID, loginUserID int64) (*Event, error) {
 		}
 		return &event, nil
 	}
-	return nil, nil
 }
 
 func sanitizeEvent(e *Event) *Event {
@@ -866,7 +865,8 @@ func main() {
 				event_cache.Sheets[sheet_rank].Detail = append(event_cache.Sheets[sheet_rank].Detail[:idx], event_cache.Sheets[sheet_rank].Detail[idx+1:]...)
 			}
 		}
-		eventsCache[event.ID-1] = event_cache
+		// TODO
+		// eventsCache[event.ID-1] = event_cache
 
 		return c.NoContent(204)
 	}, loginRequired)
