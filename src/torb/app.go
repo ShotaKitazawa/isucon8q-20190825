@@ -13,9 +13,7 @@ import (
 	_ "net/http/pprof"
 	"os"
 	"os/exec"
-	"sort"
 	"strconv"
-	"strings"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
