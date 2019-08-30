@@ -108,15 +108,15 @@ func initEventsCache() {
 		panic(err)
 	}
 	defer tx.Commit()
-	rows, err := tx.Query("SELECT * FROM events ORDER BY id ASC")
+	rows_events, err := tx.Query("SELECT * FROM events ORDER BY id ASC")
 	if err != nil {
 		panic(err)
 	}
-	defer rows.Close()
+	defer rows_events.Close()
 
-	for rows.Next() {
+	for rows_events.Next() {
 		var event Event
-		if err := rows.Scan(&event.ID, &event.Title, &event.PublicFg, &event.ClosedFg, &event.Price); err != nil {
+		if err := rows_events.Scan(&event.ID, &event.Title, &event.PublicFg, &event.ClosedFg, &event.Price); err != nil {
 			panic(err)
 		}
 		event.Total = 1000
