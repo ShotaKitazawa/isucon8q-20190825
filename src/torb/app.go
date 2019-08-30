@@ -348,15 +348,17 @@ func getEvents(all bool) ([]*Event, error) {
 
 func getEvent(eventID, loginUserID int64) (*Event, error) {
 	if int64(len(eventsCache)) > eventID {
-		event := eventsCache[eventID-1]
-		for _, sheets := range event.Sheets {
-			for _, sheet := range sheets.Detail {
-				if sheet.User == loginUserID {
-					sheet.Mine = true
+		/*
+			event := eventsCache[eventID-1]
+			for _, sheets := range event.Sheets {
+				for _, sheet := range sheets.Detail {
+					if sheet.User == loginUserID {
+						sheet.Mine = true
+					}
 				}
 			}
-		}
-		return &event, nil
+			return &event, nil
+		*/
 	} else {
 		fmt.Println("getEvent: cache miss !")
 		var event Event
@@ -853,8 +855,8 @@ func main() {
 		if err := tx.Commit(); err != nil {
 			return err
 		}
-		sheet_rank := sheetRank(sheet.ID)
 
+		sheet_rank := sheetRank(sheet.ID)
 		event_cache := eventsCache[event.ID-1]
 		event_cache.Remains++
 		event_cache.Sheets[sheet_rank].Remains--
@@ -863,6 +865,7 @@ func main() {
 				event_cache.Sheets[sheet_rank].Detail = append(event_cache.Sheets[sheet_rank].Detail[:idx], event_cache.Sheets[sheet_rank].Detail[idx+1:]...)
 			}
 		}
+		eventsCache[event.ID-1] = event_cache
 
 		return c.NoContent(204)
 	}, loginRequired)
