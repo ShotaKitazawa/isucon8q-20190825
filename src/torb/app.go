@@ -24,6 +24,7 @@ import (
 )
 
 var (
+	db          *sql.DB
 	eventsCache []Event
 )
 
@@ -151,6 +152,17 @@ func initEventsCache() {
 }
 
 func init() {
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true&charset=utf8mb4",
+		os.Getenv("DB_USER"), os.Getenv("DB_PASS"),
+		os.Getenv("DB_HOST"), os.Getenv("DB_PORT"),
+		os.Getenv("DB_DATABASE"),
+	)
+	var err error
+	db, err = sql.Open("mysql", dsn)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	initEventsCache()
 }
 
@@ -437,22 +449,10 @@ func (r *Renderer) Render(w io.Writer, name string, data interface{}, c echo.Con
 	return r.templates.ExecuteTemplate(w, name, data)
 }
 
-var db *sql.DB
-
 func main() {
 	go http.ListenAndServe(":3000", nil)
 
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true&charset=utf8mb4",
-		os.Getenv("DB_USER"), os.Getenv("DB_PASS"),
-		os.Getenv("DB_HOST"), os.Getenv("DB_PORT"),
-		os.Getenv("DB_DATABASE"),
-	)
-
 	var err error
-	db, err = sql.Open("mysql", dsn)
-	if err != nil {
-		log.Fatal(err)
-	}
 
 	e := echo.New()
 	funcs := template.FuncMap{
