@@ -268,6 +268,7 @@ func getEvent(eventID, loginUserID int64) (*Event, error) {
 		}
 		return &event, nil
 	} else {
+		fmt.Println("getEvent: cache miss !")
 		var event Event
 		if err := db.QueryRow("SELECT * FROM events WHERE id = ?", eventID).Scan(&event.ID, &event.Title, &event.PublicFg, &event.ClosedFg, &event.Price); err != nil {
 			return nil, err
@@ -902,22 +903,10 @@ func main() {
 			Remains: 1000,
 		}
 		event.Sheets = map[string]*Sheets{
-			"S": &Sheets{},
-			"A": &Sheets{},
-			"B": &Sheets{},
-			"C": &Sheets{},
-		}
-		for key, sheets := range event.Sheets {
-			sheets.Detail = make([]*Sheet, sheets.Total)
-			for i := 0; i < sheets.Total; i++ {
-				sheets.Detail[i] = &Sheet{
-					ID:    int64(sheets.Total + i + 1),
-					Rank:  key,
-					Num:   int64(i + 1),
-					Price: sheets.Price,
-				}
-			}
-			sheets.Remains = sheets.Total
+			"S": &Sheets{Total: 50, Remains: 50},
+			"A": &Sheets{Total: 150, Remains: 150},
+			"B": &Sheets{Total: 300, Remains: 300},
+			"C": &Sheets{Total: 500, Remains: 500},
 		}
 		eventsCache = append(eventsCache, event)
 
