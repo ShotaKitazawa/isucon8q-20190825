@@ -348,8 +348,8 @@ func getEvents(all bool) ([]*Event, error) {
 
 func getEvent(eventID, loginUserID int64) (*Event, error) {
 	if int64(len(eventsCache)) > eventID {
+		event := eventsCache[eventID-1]
 		/*
-			event := eventsCache[eventID-1]
 			for _, sheets := range event.Sheets {
 				for _, sheet := range sheets.Detail {
 					if sheet.User == loginUserID {
@@ -358,7 +358,7 @@ func getEvent(eventID, loginUserID int64) (*Event, error) {
 				}
 			}
 		*/
-		return &Event{}, nil
+		return &event, nil
 	} else {
 		fmt.Println("getEvent: cache miss !")
 		var event Event
