@@ -103,12 +103,7 @@ type Administrator struct {
 func initEventsCache() {
 	eventsCache = []Event{}
 
-	tx, err := db.Begin()
-	if err != nil {
-		panic(err)
-	}
-	defer tx.Commit()
-	rows_events, err := tx.Query("SELECT * FROM events ORDER BY id ASC")
+	rows_events, err := db.Query("SELECT * FROM events ORDER BY id ASC")
 	if err != nil {
 		panic(err)
 	}
