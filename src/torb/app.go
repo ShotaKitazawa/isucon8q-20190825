@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"database/sql"
 	"encoding/json"
 	"errors"
@@ -14,6 +13,7 @@ import (
 	"os"
 	"os/exec"
 	"strconv"
+	"strings"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -995,12 +995,15 @@ type Report struct {
 }
 
 func renderReportCSV(c echo.Context, reports []Report) error {
-	//sort.Slice(reports, func(i, j int) bool { return strings.Compare(reports[i].SoldAt, reports[j].SoldAt) < 0 })
+	// sort.Slice(reports, func(i, j int) bool { return strings.Compare(reports[i].SoldAt, reports[j].SoldAt) < 0 })
 
-	body := bytes.NewBufferString("reservation_id,event_id,rank,num,price,user_id,sold_at,canceled_at\n")
+	// body := bytes.NewBufferString("reservation_id,event_id,rank,num,price,user_id,sold_at,canceled_at\n")
+	body := io.Reader(strings.NewReader("reservation_id,event_id,rank,num,price,user_id,sold_at,canceled_at\n"))
+
 	for _, v := range reports {
-		body.WriteString(fmt.Sprintf("%d,%d,%s,%d,%d,%d,%s,%s\n",
-			v.ReservationID, v.EventID, v.Rank, v.Num, v.Price, v.UserID, v.SoldAt, v.CanceledAt))
+		// body.WriteString(fmt.Sprintf("%d,%d,%s,%d,%d,%d,%s,%s\n",
+		//	v.ReservationID, v.EventID, v.Rank, v.Num, v.Price, v.UserID, v.SoldAt, v.CanceledAt))
+		body = io.MultiReader(body, strings.NewReader(fmt.Sprintf("%d,%d,%s,%d,%d,%d,%s,%s\n", v.ReservationID, v.EventID, v.Rank, v.Num, v.Price, v.UserID, v.SoldAt, v.CanceledAt)))
 	}
 
 	c.Response().Header().Set("Content-Type", `text/csv; charset=UTF-8`)
