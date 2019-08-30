@@ -83,11 +83,75 @@ type Reservation struct {
 	CanceledAtUnix int64  `json:"canceled_at,omitempty"`
 }
 
+type ReservedSheet struct {
+	UserID     int64
+	SheetID    int64
+	Rank       string
+	Num        int64
+	Price      int64
+	ReservedAt *time.Time
+}
+
 type Administrator struct {
 	ID        int64  `json:"id,omitempty"`
 	Nickname  string `json:"nickname,omitempty"`
 	LoginName string `json:"login_name,omitempty"`
 	PassHash  string `json:"pass_hash,omitempty"`
+}
+
+func initEventsCache() {
+	eventsCache = []Event{}
+
+	tx, err := db.Begin()
+	if err != nil {
+		panic(err)
+	}
+	defer tx.Commit()
+	rows, err := tx.Query("SELECT * FROM events ORDER BY id ASC")
+	if err != nil {
+		panic(err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var event Event
+		if err := rows.Scan(&event.ID, &event.Title, &event.PublicFg, &event.ClosedFg, &event.Price); err != nil {
+			panic(err)
+		}
+		event.Total = 1000
+		event.Remains = 1000
+
+		rows, err := db.Query("SELECT r.user_id, r.sheet_id, s.rank, s.num, s.price, r.reserved_at FROM reservations AS r JOIN sheets AS s ON r.sheet_id = s.id WHERE r.event_id = ? AND r.canceled_at IS NULL", event.ID)
+		if err != nil {
+			panic(err)
+		}
+		defer rows.Close()
+
+		for rows.Next() {
+			reserved_sheet := ReservedSheet{}
+			if err := rows.Scan(&reserved_sheet.UserID, &reserved_sheet.SheetID, &reserved_sheet.Rank, &reserved_sheet.Num, &reserved_sheet.Price, &reserved_sheet.ReservedAt); err != nil {
+				panic(err)
+			}
+			event.Sheets[reserved_sheet.Rank].Remains--
+			event.Sheets[reserved_sheet.Rank].Detail[reserved_sheet.Num-1] = &Sheet{
+				ID:             reserved_sheet.SheetID,
+				Rank:           reserved_sheet.Rank,
+				Num:            reserved_sheet.Num,
+				Price:          event.Price + reserved_sheet.Price,
+				Reserved:       true,
+				ReservedAt:     reserved_sheet.ReservedAt,
+				ReservedAtUnix: reserved_sheet.ReservedAt.Unix(),
+			}
+			event.Remains--
+		}
+
+		eventsCache = append(eventsCache, event)
+	}
+
+}
+
+func init() {
+	initEventsCache()
 }
 
 func sheetRank(sheet_id int64) string {
@@ -305,14 +369,6 @@ func getEvent(eventID, loginUserID int64) (*Event, error) {
 			sheets.Remains = sheets.Total
 		}
 
-		type ReservedSheet struct {
-			UserID     int64
-			SheetID    int64
-			Rank       string
-			Num        int64
-			Price      int64
-			ReservedAt *time.Time
-		}
 		rows, err := db.Query("SELECT r.user_id, r.sheet_id, s.rank, s.num, s.price, r.reserved_at FROM reservations AS r JOIN sheets AS s ON r.sheet_id = s.id WHERE r.event_id = ? AND r.canceled_at IS NULL", eventID)
 		if err != nil {
 			return nil, err
@@ -434,25 +490,7 @@ func main() {
 			return nil
 		}
 
-		tx, err := db.Begin()
-		if err != nil {
-			return nil
-		}
-		defer tx.Commit()
-		rows, err := tx.Query("SELECT * FROM events ORDER BY id ASC")
-		if err != nil {
-			return nil
-		}
-		defer rows.Close()
-
-		for rows.Next() {
-			var event Event
-			if err := rows.Scan(&event.ID, &event.Title, &event.PublicFg, &event.ClosedFg, &event.Price); err != nil {
-				return nil
-			}
-			eventsCache = append(eventsCache, event)
-		}
-
+		initEventsCache()
 		return c.NoContent(204)
 	})
 	e.POST("/api/users", func(c echo.Context) error {
