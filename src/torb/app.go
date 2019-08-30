@@ -423,6 +423,7 @@ func getEvent(eventID, loginUserID int64) (*Event, error) {
 		}
 		return &event, nil
 	}
+	return nil, nil
 }
 
 func sanitizeEvent(e *Event) *Event {
