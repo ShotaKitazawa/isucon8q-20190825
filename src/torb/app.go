@@ -116,7 +116,12 @@ func initEventsCache() {
 		}
 		event.Total = 1000
 		event.Remains = 1000
-
+		event.Sheets = map[string]*Sheets{
+			"S": &Sheets{Total: 50, Remains: 50, Price: event.Price + 5000},
+			"A": &Sheets{Total: 150, Remains: 150, Price: event.Price + 3000},
+			"B": &Sheets{Total: 300, Remains: 300, Price: event.Price + 1000},
+			"C": &Sheets{Total: 500, Remains: 500, Price: event.Price},
+		}
 		rows, err := db.Query("SELECT r.user_id, r.sheet_id, s.rank, s.num, s.price, r.reserved_at FROM reservations AS r JOIN sheets AS s ON r.sheet_id = s.id WHERE r.event_id = ? AND r.canceled_at IS NULL", event.ID)
 		if err != nil {
 			panic(err)
@@ -143,7 +148,6 @@ func initEventsCache() {
 
 		eventsCache = append(eventsCache, event)
 	}
-
 }
 
 func init() {
