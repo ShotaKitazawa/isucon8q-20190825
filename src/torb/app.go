@@ -122,6 +122,19 @@ func initEventsCache() {
 			"B": &Sheets{Total: 300, Remains: 300, Price: event.Price + 1000},
 			"C": &Sheets{Total: 500, Remains: 500, Price: event.Price},
 		}
+		for key, sheets := range event.Sheets {
+			sheets.Detail = make([]*Sheet, sheets.Total)
+			for i := 0; i < sheets.Total; i++ {
+				sheets.Detail[i] = &Sheet{
+					ID:    int64(sheets.Total + i + 1),
+					Rank:  key,
+					Num:   int64(i + 1),
+					Price: sheets.Price,
+				}
+			}
+			sheets.Remains = sheets.Total
+		}
+
 		rows, err := db.Query("SELECT r.user_id, r.sheet_id, s.rank, s.num, s.price, r.reserved_at FROM reservations AS r JOIN sheets AS s ON r.sheet_id = s.id WHERE r.event_id = ? AND r.canceled_at IS NULL", event.ID)
 		if err != nil {
 			panic(err)
