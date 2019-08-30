@@ -124,7 +124,9 @@ func initEventsCache() {
 		}
 		for key, sheets := range event.Sheets {
 			sheets.Detail = make([]*Sheet, sheets.Total)
+			fmt.Println(sheets.Total)
 			for i := 0; i < sheets.Total; i++ {
+				fmt.Println("loop")
 				sheets.Detail[i] = &Sheet{
 					ID:    int64(sheets.Total + i + 1),
 					Rank:  key,
