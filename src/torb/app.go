@@ -927,6 +927,8 @@ func main() {
 		}
 		defer rows.Close()
 
+		time.Sleep(100 * time.Millisecond)
+
 		var reports []Report
 		for rows.Next() {
 			var reservation Reservation
