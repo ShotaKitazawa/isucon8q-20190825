@@ -86,6 +86,21 @@ type Administrator struct {
 	PassHash  string `json:"pass_hash,omitempty"`
 }
 
+func sheetID2sheetPrice(sheet_id int64) int {
+	switch {
+	case (0 < sheet_id) && (sheet_id <= 50):
+		return 5000
+	case (50 < sheet_id) && (sheet_id <= 200):
+		return 3000
+	case (200 < sheet_id) && (sheet_id <= 500):
+		return 1000
+	case (500 < sheet_id) && (sheet_id <= 1000):
+		return 0
+	default:
+		panic(errors.New(""))
+	}
+}
+
 func sessUserID(c echo.Context) int64 {
 	sess, _ := session.Get("session", c)
 	var userID int64
@@ -521,10 +536,26 @@ func main() {
 			recentReservations = make([]Reservation, 0)
 		}
 
-		var totalPrice int
-		if err := db.QueryRow("SELECT IFNULL(SUM(e.price + s.price), 0) FROM reservations r INNER JOIN sheets s ON s.id = r.sheet_id INNER JOIN events e ON e.id = r.event_id WHERE r.user_id = ? AND r.canceled_at IS NULL", user.ID).Scan(&totalPrice); err != nil {
+		var totalPrice, price int
+		var sheet_id int64
+		rows, err = db.Query("SELECT e.price, r.sheet_id FROM reservations r INNER JOIN events e ON e.id = r.event_id WHERE r.user_id = ? AND r.canceled_at IS NULL", user.ID)
+		if err != nil {
 			return err
 		}
+		defer rows.Close()
+		for rows.Next() {
+			if err := rows.Scan(&price, &sheet_id); err != nil {
+				return err
+			}
+			totalPrice += price + sheetID2sheetPrice(sheet_id)
+		}
+
+		/*
+			var totalPrice int
+			if err := db.QueryRow("SELECT IFNULL(SUM(e.price + s.price), 0) FROM reservations r INNER JOIN sheets s ON s.id = r.sheet_id INNER JOIN events e ON e.id = r.event_id WHERE r.user_id = ? AND r.canceled_at IS NULL", user.ID).Scan(&totalPrice); err != nil {
+				return err
+			}
+		*/
 
 		rows, err = db.Query("SELECT event_id FROM reservations WHERE user_id = ? GROUP BY event_id ORDER BY MAX(IFNULL(canceled_at, reserved_at)) DESC LIMIT 5", user.ID)
 		if err != nil {
@@ -920,6 +951,7 @@ func main() {
 		if err != nil {
 			return err
 		}
+		time.Sleep(100 * time.Millisecond)
 
 		rows, err := db.Query("SELECT r.*, s.rank AS sheet_rank, s.num AS sheet_num, s.price AS sheet_price, e.price AS event_price FROM reservations r INNER JOIN sheets s ON s.id = r.sheet_id INNER JOIN events e ON e.id = r.event_id WHERE r.event_id = ? ORDER BY reserved_at ASC FOR UPDATE", event.ID)
 		if err != nil {
