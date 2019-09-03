@@ -498,6 +498,7 @@ func main() {
 		if err != nil {
 			return nil
 		}
+		initRandomSheetCache()
 
 		return c.NoContent(204)
 	})
@@ -744,8 +745,11 @@ func main() {
 
 		var sheet Sheet
 		var reservationID int64
+		sheet_id := randomSheetCache[event.ID-1][params.Rank][0]
 		for {
-			if err := db.QueryRow("SELECT * FROM sheets WHERE id NOT IN (SELECT sheet_id FROM reservations WHERE event_id = ? AND canceled_at IS NULL FOR UPDATE) AND `rank` = ? ORDER BY RAND() LIMIT 1", event.ID, params.Rank).Scan(&sheet.ID, &sheet.Rank, &sheet.Num, &sheet.Price); err != nil {
+
+			// if err := db.QueryRow("SELECT * FROM sheets WHERE id NOT IN (SELECT sheet_id FROM reservations WHERE event_id = ? AND canceled_at IS NULL FOR UPDATE) AND `rank` = ? ORDER BY RAND() LIMIT 1", event.ID, params.Rank).Scan(&sheet.ID, &sheet.Rank, &sheet.Num, &sheet.Price); err != nil {
+			if err := db.QueryRow("SELECT * FROM sheets WHERE sheet_id = ? AND id NOT IN (SELECT sheet_id FROM reservations WHERE event_id = ? AND canceled_at IS NULL FOR UPDATE)", sheet_id, event.ID).Scan(&sheet.ID, &sheet.Rank, &sheet.Num, &sheet.Price); err != nil {
 				if err == sql.ErrNoRows {
 					return resError(c, "sold_out", 409)
 				}
@@ -775,6 +779,7 @@ func main() {
 				continue
 			}
 
+			randomSheetCache[event.ID-1][params.Rank] = randomSheetCache[event.ID-1][params.Rank][1:]
 			break
 		}
 		return c.JSON(202, echo.Map{
