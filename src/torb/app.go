@@ -745,6 +745,9 @@ func main() {
 
 		var sheet Sheet
 		var reservationID int64
+		if len(randomSheetCache[event.ID-1][params.Rank]) == 0 {
+			return resError(c, "sold_out", 409)
+		}
 		sheet_id := randomSheetCache[event.ID-1][params.Rank][0]
 		for {
 			// if err := db.QueryRow("SELECT * FROM sheets WHERE id NOT IN (SELECT sheet_id FROM reservations WHERE event_id = ? AND canceled_at IS NULL FOR UPDATE) AND `rank` = ? ORDER BY RAND() LIMIT 1", event.ID, params.Rank).Scan(&sheet.ID, &sheet.Rank, &sheet.Num, &sheet.Price); err != nil {
