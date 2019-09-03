@@ -79,6 +79,15 @@ type Reservation struct {
 	CanceledAtUnix int64  `json:"canceled_at,omitempty"`
 }
 
+type ReservedSheet struct {
+	UserID     int64
+	SheetID    int64
+	Rank       string
+	Num        int64
+	Price      int64
+	ReservedAt *time.Time
+}
+
 type Administrator struct {
 	ID        int64  `json:"id,omitempty"`
 	Nickname  string `json:"nickname,omitempty"`
@@ -275,14 +284,6 @@ func getEvent(eventID, loginUserID int64) (*Event, error) {
 		sheets.Remains = sheets.Total
 	}
 
-	type ReservedSheet struct {
-		UserID     int64
-		SheetID    int64
-		Rank       string
-		Num        int64
-		Price      int64
-		ReservedAt *time.Time
-	}
 	rows, err := db.Query("SELECT r.user_id, r.sheet_id, s.rank, s.num, s.price, r.reserved_at FROM reservations AS r JOIN sheets AS s ON r.sheet_id = s.id WHERE r.event_id = ? AND r.canceled_at IS NULL", eventID)
 	if err != nil {
 		return nil, err
