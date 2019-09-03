@@ -25,6 +25,12 @@ import (
 	"github.com/labstack/echo/middleware"
 )
 
+var (
+	db *sql.DB
+	// event_idにおけるrankごとのint配列
+	randomSheetCache []map[string][]int
+)
+
 type User struct {
 	ID        int64  `json:"id,omitempty"`
 	Nickname  string `json:"nickname,omitempty"`
@@ -93,6 +99,53 @@ type Administrator struct {
 	Nickname  string `json:"nickname,omitempty"`
 	LoginName string `json:"login_name,omitempty"`
 	PassHash  string `json:"pass_hash,omitempty"`
+}
+
+func init() {
+	initRandomSheetCache()
+}
+
+func initRandomSheetCache() {
+	fmt.Println("start initRandomSheetCache()")
+
+	erows, err := db.Query("SELECT id FROM events")
+	if err != nil {
+		panic(err)
+	}
+	defer erows.Close()
+
+	cnt := 0
+	for erows.Next() {
+		var event_id int
+		if err := erows.Scan(&event_id); err != nil {
+			panic(err)
+		}
+		randomSheetCache = append(randomSheetCache, map[string][]int{
+			"S": {},
+			"A": {},
+			"B": {},
+			"C": {},
+		})
+
+		rows, err := db.Query("SELECT id, rank FROM sheets WHERE id NOT IN (SELECT sheet_id FROM reservations WHERE event_id = ? AND canceled_at IS NULL FOR UPDATE) AND `rank` = ? ORDER BY RAND()", event_id)
+		if err != nil {
+			panic(err)
+		}
+		defer rows.Close()
+
+		for rows.Next() {
+			var id int
+			var rank string
+			if err := rows.Scan(&id, &rank); err != nil {
+				panic(err)
+			}
+			randomSheetCache[cnt][rank] = append(randomSheetCache[cnt][rank], id)
+		}
+		cnt++
+	}
+
+	fmt.Println("finish initRandomSheetCache()")
+
 }
 
 func sheetID2sheetPrice(sheet_id int64) int {
@@ -389,8 +442,6 @@ type Renderer struct {
 func (r *Renderer) Render(w io.Writer, name string, data interface{}, c echo.Context) error {
 	return r.templates.ExecuteTemplate(w, name, data)
 }
-
-var db *sql.DB
 
 func main() {
 	go http.ListenAndServe(":3000", nil)
