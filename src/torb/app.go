@@ -139,8 +139,11 @@ func initRandomSheetCache() {
 			"C": {},
 		})
 
-		rows, err := db.Query("SELECT id, rank FROM sheets WHERE id NOT IN (SELECT sheet_id FROM reservations WHERE event_id = ? AND canceled_at IS NULL FOR UPDATE) AND `rank` = ? ORDER BY RAND()", event_id)
+		rows, err := db.Query("SELECT id, rank FROM sheets WHERE id NOT IN (SELECT sheet_id FROM reservations WHERE event_id = ? AND canceled_at IS NULL FOR UPDATE) ORDER BY RAND()", event_id)
 		if err != nil {
+			if err == sql.ErrNoRows {
+				continue
+			}
 			panic(err)
 		}
 		defer rows.Close()
