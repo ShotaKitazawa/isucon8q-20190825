@@ -102,6 +102,18 @@ type Administrator struct {
 }
 
 func init() {
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true&charset=utf8mb4",
+		os.Getenv("DB_USER"), os.Getenv("DB_PASS"),
+		os.Getenv("DB_HOST"), os.Getenv("DB_PORT"),
+		os.Getenv("DB_DATABASE"),
+	)
+
+	var err error
+	db, err = sql.Open("mysql", dsn)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	initRandomSheetCache()
 }
 
@@ -444,19 +456,9 @@ func (r *Renderer) Render(w io.Writer, name string, data interface{}, c echo.Con
 }
 
 func main() {
-	go http.ListenAndServe(":3000", nil)
-
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true&charset=utf8mb4",
-		os.Getenv("DB_USER"), os.Getenv("DB_PASS"),
-		os.Getenv("DB_HOST"), os.Getenv("DB_PORT"),
-		os.Getenv("DB_DATABASE"),
-	)
-
 	var err error
-	db, err = sql.Open("mysql", dsn)
-	if err != nil {
-		log.Fatal(err)
-	}
+
+	go http.ListenAndServe(":3000", nil)
 
 	e := echo.New()
 	funcs := template.FuncMap{
